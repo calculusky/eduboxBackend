@@ -50,7 +50,7 @@ exports.checkPermission = async (req, res, next) => {
     try {
         if(!authHeader){
             throwError({ 
-                message: ['Not authorized'], 
+                message: 'Not authorized', 
                 status: 403, 
                 detail: 'Token not found. Make sure a token is included in the header',
             });
@@ -63,7 +63,7 @@ exports.checkPermission = async (req, res, next) => {
         const isTokenStored = await User.findOne({loginTokens: token});
         if(!isTokenStored){
             throwError({ 
-                message: ['Not authorized.'],
+                message: 'Not authorized',
                 detail: 'Access denied. Token does not exist', 
                 status: 403
             });
@@ -72,7 +72,7 @@ exports.checkPermission = async (req, res, next) => {
         //console.log(decodedUser, 'decUser')
         if(!decodedUser){
             throwError({ 
-                message: ['Authentication failed.'],
+                message: 'Authentication failed',
                 detail: 'Verification of jwt token failed. Try again', 
                 status: 500, 
             });

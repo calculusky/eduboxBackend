@@ -56,13 +56,11 @@ app.use((error, req, res, next) => {
     const message = error.message;
     const errorDetail = error.detail || null;
     res.status(status).json({ 
-       errors: [
-           {
+       errors: {
             message: message, 
             status: status, 
             detail: errorDetail,
-           }
-       ] 
+        } 
     })
 })
 

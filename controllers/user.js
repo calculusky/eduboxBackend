@@ -7,7 +7,7 @@ exports.dashboard = async (req, res, next) => {
         const user = await User.findById(req.userId);
         if(!user){
             throwError({ 
-                message: ['User not found'], 
+                message: 'User not found', 
                 status: 404, 
                 detail: 'The user could not be found in the database'
             });
