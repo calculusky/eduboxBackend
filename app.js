@@ -1,16 +1,48 @@
 require('dotenv').config();
 const path = require('path');
 const mongoose = require('mongoose');
+const passport = require('passport');
 const express = require('express');
 const app = express();
 
 //import all routes
-const studentRoutes = require('./routes/student');
+const authRoutes = require('./routes/auth');
+
+//import files
+const { googlePassportConfig } = require('./controllers/passport');
+
+
+// **********  INITIALIZE MIDDLEWARES  *************//
+app.set('view engine', 'ejs');
+app.set('views', 'views');
+
+
+//passport middlewares
+app.use(passport.initialize());
+app.use(passport.session());
+
+//parse bodies
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-//import routes
-app.use('/api', studentRoutes);
+// ***********************************************
+
+//passport config
+googlePassportConfig(passport);
+
+//*************** ROUTES  **********************/
+app.use('/auth', authRoutes);
+
+//***************************************************/
+
+//************ testing passport********* */
+app.get('/login', (req, res) => {
+    res.render('login')
+})
+app.get('/', (req, res) => {
+    res.render('dashboard')
+})
+//************************************* */
 
 //handle errors
 app.use((error, req, res, next) => {

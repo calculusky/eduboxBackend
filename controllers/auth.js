@@ -71,7 +71,7 @@ exports.signup = async (req, res, next) => {
             lastname: sanLastname,
             password: hashedPassword,
             institution: institution,
-            educationlevel: educationlevel
+            educationlevel: educationlevel,
         })
         const savedUser = await user.save();
         const returnUser = {
@@ -103,3 +103,4 @@ exports.signup = async (req, res, next) => {
     next(error)
   }
 }
+

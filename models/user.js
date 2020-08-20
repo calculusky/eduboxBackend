@@ -5,28 +5,32 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    googleId: {
+        type: String,
+        //required: true
+    },
     firstname: {
         type: String,
         required: true
     },
     middlename: {
-        type: String,
-        required: true
+        type: String
+        //required: true
     },
     lastname: {
         type: String,
         required: true
     },
     educationlevel: {
-        type: String,
-        required: true
+        type: String
+        //required: true
     },
     institution: {
-        type: String, 
-        required: true
+        type: String 
+        //required: true
     },
     password: {
-        type: String,
+        type: String
         //required: true
     }
 
