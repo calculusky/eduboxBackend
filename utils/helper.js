@@ -27,6 +27,17 @@ exports.transporter = () => {
     return transporter;
 }
 
+//sanitize name
 exports.sanitizeName = (name) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+//generate email verification code
+exports.generateCode = (length) => {
+    let result = '';
+    const characters = 'ABCDEFGHIJK01234LMNOPQRSTUVWXYZ56789';
+    for(let i = 0; i < length; i++){
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
 }

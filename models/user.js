@@ -32,6 +32,13 @@ const userSchema = new Schema({
     password: {
         type: String
         //required: true
+    },
+    status: {
+        type: String,
+        default: 'inactive'
+    },
+    emailVerificationCode: {
+        type: String
     }
 
 })

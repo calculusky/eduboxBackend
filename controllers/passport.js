@@ -13,7 +13,8 @@ exports.googlePassportConfig = (passport) => {
                 googleId: profile.id,
                 email: profile.emails[0].value,
                 firstname: profile.name.givenName,
-                lastname: profile.name.familyName
+                lastname: profile.name.familyName,
+                status: 'active'
             }
             try {
                 let user = await User.findOne({ googleId: profile.id });

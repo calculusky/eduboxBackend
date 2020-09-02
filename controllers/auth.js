@@ -1,12 +1,12 @@
 const { isEmail, isEmpty, matches, isAlpha, normalizeEmail } = require('validator');
 const { hash, compare } = require('bcryptjs');
-const { throwError, passwordRegExp, transporter, sanitizeName } = require('../utils/helper');
+const { throwError, passwordRegExp, transporter, sanitizeName, generateCode } = require('../utils/helper');
+const { registrationEmail } = require('../utils/support');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const emailVerifyLink = 'http://localhost:8080/login';
+const emailVerificationLink = 'http://localhost:8080/auth/verifyEmail';
 
-exports.signup = async(req, res, next) => {
-
+exports.postSignup = async(req, res, next) => {
     const {
         firstname,
         middlename,
@@ -66,37 +66,90 @@ exports.signup = async(req, res, next) => {
             throw error;
         }
 
-        //send a confirmation mail to the user
+        //store the user in the db and return a token to the client  in case the user received no mail
+        const emailVerificationCode = generateCode(6);
+        const harshedPassword = await hash(sanPassword, 12);
         const newUser = {
             email: sanEmail,
             firstname: sanFirstname,
             middlename: sanMiddlename,
             lastname: sanLastname,
-            password: hashedPassword,
+            password: harshedPassword,
             institution: institution,
             educationlevel: educationlevel,
+            emailVerificationCode: emailVerificationCode
         }
-        const token = jwt.sign(newUser, process.env.JWT_SIGN_KEY);
-        res.status(200).json({ message: 'Email verification sent to your email address' })
-        const mailOPts = {
-            from: 'calculusky@gmail.com',
-            to: sanEmail,
-            subject: 'Edubox email verification',
-            html: `<div style="border-radius:5px">
-                                    <h2>EDUBOX</h2>
-                                    <p>Hi, ${savedUser.firstname}</p> 
-                                    <p>You have one more step remaining to activate your EDUBOX account. Kindly click on the button below to verify your email address</p>
-                                    <span><a style="text-decoration:none; color:white; background-color:blue; padding:5px 8px; border-radius:4px" href="${emailVerifyLink}/${token}">Verify my email</a></span>
-                                    <p style="color:grey">Didn't work? Copy the link below and paste into your web browser</p>
-                                    <p><a style="text-decoration:none; color:blue" href="${emailVerifyLink}/${token}">${emailVerifyLink}/${token}"</a></p>
-                                    <p> Warm regards </p>
-                                    <span>Edubox</span>
-                        </div>`
+        const token = await jwt.sign(newUser, process.env.JWT_SIGN_KEY);
+        const user = new User(newUser);
+        const savedUser = await user.save();
+        res.status(200).json({ message: 'Email verification sent to your email address', registerToken: token });
+
+        //send a confirmation mail to the user
+        const registrationEmailVariables = {
+            email: sanEmail,
+            name: sanFirstname,
+            code: emailVerificationCode,
+            link: emailVerificationLink
         }
+        const mailOPts = registrationEmail(registrationEmailVariables);
         await transporter().sendMail(mailOPts);
 
     } catch (error) {
         console.log(error, 'catch err')
         next(error)
+    }
+}
+
+
+exports.resendEmailVerificationCode = async (req, res, next) => {
+    //post request
+    const token = req.body.token;
+    try {
+        const decodedUser = await jwt.verify(token, process.env.JWT_SIGN_KEY);
+        if(!decodedUser){
+            const error = new Error('Invalid token');
+            error.statusCode = 401;
+            throw error
+        }
+
+        //resend the email
+        const registrationEmailVariables = {
+            email: decodedUser.email,
+            name: decodedUser.firstname,
+            code: decodedUser.emailVerificationCode,
+            link: decodedUser.emailVerificationLink
+        }
+        const mailOPts = registrationEmail(registrationEmailVariables);
+        res.status(200).json({message: 'Email verification successfuly sent'})
+        await transporter().sendMail(mailOPts);
+
+        
+    } catch (error) {
+        next(error);
+    }
+
+}
+
+exports.getVerifiedSignupMail = async (req, res, next) => {
+    //verify new users email and activate their account
+    const { verifyCode, email } = req.query;  
+    try {
+        const user = await User.findOne({ emailVerificationCode: verifyCode, email: email});
+        if(!user){
+            const error = new Error('User not found');
+            error.statusCode = 404;
+            throw error;
+        }
+        user.status = 'active';
+        user.emailVerificationCode = undefined;
+        const savedUser = await user.save();
+        const returnUser = {
+            ...savedUser._doc,
+            password: undefined
+        }
+        return res.status(200).json({message: 'Account successfully created', user: returnUser});
+        
+    } catch (error) {
+      next(error)  
     }
 }

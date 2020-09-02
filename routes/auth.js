@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router()
 
-const { signup } = require('../controllers/auth');
+const { 
+       postSignup, 
+       getVerifiedSignupMail, 
+       resendEmailVerificationCode
+      } = require('../controllers/auth');
 
 const { 
         passportAuthGoogleSuccess,
@@ -10,7 +14,9 @@ const {
        } = require('../controllers/passportAuth');
 
 
-router.post('/signup', signup);
+router.post('/signup', postSignup);
+router.get('/verifyEmail', getVerifiedSignupMail);
+router.post('/resendVerificationEmail', resendEmailVerificationCode);
 router.get('/google', passportAuthGoogleProfile);
 router.get('/google/callback', passportAuthGoogleFailure, passportAuthGoogleSuccess)
 
