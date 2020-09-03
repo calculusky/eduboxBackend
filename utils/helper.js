@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const mailgun = require('nodemailer-mailgun-transport');
+const mailgun = require('nodemailer-sendgrid-transport');
 
 
 exports.throwError = (message, statusCode, errors) => {
@@ -20,7 +20,7 @@ exports.transporter = () => {
     const api = {
         auth: {
             api_key: process.env.SMTP_API_KEY,
-            domain: process.env.SMTP_DOMAIN
+            // domain: process.env.SMTP_DOMAIN
         }
     }
     const transporter = nodemailer.createTransport(mailgun(api));
