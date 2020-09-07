@@ -3,21 +3,21 @@ const router = express.Router()
 
 const { 
        postSignup, 
-       getVerifiedSignupMail, 
-       resendEmailVerificationCode
+       getVerifyAccount, 
+       postResendEmailVerificationCode
       } = require('../controllers/auth');
 
 const { 
-        passportAuthGoogleSuccess,
-        passportAuthGoogleProfile,
-        passportAuthGoogleFailure,        
+        getPassportAuthGoogleSuccess,
+        getPassportAuthGoogleProfile,
+        getPassportAuthGoogleFailure,        
        } = require('../controllers/passportAuth');
 
 
 router.post('/signup', postSignup);
-router.get('/verifyEmail', getVerifiedSignupMail);
-router.post('/resendVerificationEmail', resendEmailVerificationCode);
-router.get('/google', passportAuthGoogleProfile);
-router.get('/google/callback', passportAuthGoogleFailure, passportAuthGoogleSuccess)
+router.get('/verifyemail', getVerifyAccount);
+router.post('/resendverificationemail', postResendEmailVerificationCode);
+router.get('/google', getPassportAuthGoogleProfile);
+router.get('/google/callback', getPassportAuthGoogleFailure, getPassportAuthGoogleSuccess)
 
 module.exports = router;

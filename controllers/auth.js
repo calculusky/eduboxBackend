@@ -4,7 +4,7 @@ const { throwError, passwordRegExp, transporter, sanitizeName, generateCode } = 
 const { registrationEmail } = require('../utils/support');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const emailVerificationLink = 'http://localhost:8080/auth/verifyEmail';
+const emailVerificationLink = 'http://localhost:8080/auth/verifyemail';
 
 exports.postSignup = async(req, res, next) => {
     const {
@@ -101,7 +101,7 @@ exports.postSignup = async(req, res, next) => {
 }
 
 
-exports.resendEmailVerificationCode = async (req, res, next) => {
+exports.postResendEmailVerificationCode = async (req, res, next) => {
     //post request
     const token = req.body.token;
     try {
@@ -120,7 +120,7 @@ exports.resendEmailVerificationCode = async (req, res, next) => {
             link: decodedUser.emailVerificationLink
         }
         const mailOPts = registrationEmail(registrationEmailVariables);
-        res.status(200).json({message: 'Email verification successfuly sent'})
+        res.status(200).json({message: 'Email verification successfuly resent', token: token})
         await transporter().sendMail(mailOPts);
 
         
@@ -130,24 +130,26 @@ exports.resendEmailVerificationCode = async (req, res, next) => {
 
 }
 
-exports.getVerifiedSignupMail = async (req, res, next) => {
+exports.getVerifyAccount = async (req, res, next) => {
     //verify new users email and activate their account
-    const { verifyCode, email } = req.query;  
+    const { verifycode, email } = req.query;  
     try {
-        const user = await User.findOne({ emailVerificationCode: verifyCode, email: email});
-        if(!user){
-            const error = new Error('User not found');
-            error.statusCode = 404;
-            throw error;
-        }
-        user.status = 'active';
-        user.emailVerificationCode = undefined;
-        const savedUser = await user.save();
-        const returnUser = {
-            ...savedUser._doc,
-            password: undefined
-        }
-        return res.status(200).json({message: 'Account successfully created', user: returnUser});
+        const newUser = await User.findOne({ emailVerificationCode: verifycode, email: email});
+        const verifiedUser = await User.findOne({email: email, status: 'active'});
+        if(newUser){
+            newUser.status = 'active';
+            newUser.emailVerificationCode = undefined;
+            const savedUser = await newUser.save();
+            const returnUser = {
+                ...savedUser._doc,
+                password: undefined
+            }
+            return res.status(200).json({message: 'Account successfully created', user: returnUser});                
+        }else if(verifiedUser){
+           return res.status(401).json({message: 'Email already verified'})
+        }else{
+           return res.status(404).json({message: 'User not found'})
+        }        
         
     } catch (error) {
       next(error)  
