@@ -7,6 +7,8 @@ exports.googlePassportConfig = (passport) => {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             callbackURL: process.env.GOOGLE_CALLBACK_URL
+            // callback url for app development mode
+            // callbackURL: "https://auth.expo.io/@chizchris15/Edubox-mobile-app"
         },
         async(accessToken, refreshToken, profile, done) => {
             console.log(profile, 'profile');
