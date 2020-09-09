@@ -54,7 +54,7 @@ app.use((error, req, res, next) => {
 
 //connect the app to db
 mongoose
-    .connect('mongodb://localhost:27017/edubox', { useNewUrlParser: true, useUnifiedTopology: true })
+    .connect(process.env.MONGO_DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(conn => {
         const port = process.env.PORT || 8080;
         app.listen(port, () => `Server running on port ${port}`);
