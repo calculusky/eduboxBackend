@@ -8,9 +8,12 @@
     "dev": "nodemon",
     "start": "node app.js"
   },
+  "engines": {
+    "node": "12.18.3"
+  },
   "repository": {
     "type": "git",
-    "url": "edubox-mobile-app"
+    "url": "http://github.com/calculusky/eduboxBackend"
   },
   "author": "calculusky",
   "license": "ISC",
