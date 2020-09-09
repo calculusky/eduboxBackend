@@ -11,7 +11,7 @@ exports.throwError = (message, statusCode, errors) => {
 
 //check for password ****Note*** At least one lowercase, uppercase, numeral and special characters: @,!,$ only with minimum of 8 characters
 exports.passwordRegExp = () => {
-    const regExp = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@!$])(?!.*[£&#_%^*+()\-\~\`\\/\"\'|\[\]}{:;/>.<,])(?!.*\s).{8,}$/;
+    const regExp = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[@!$])(?!.*[£&#_%^*+()\-\~\`\\/\"\'|\[\]}{:;/>.<,])(?!.*\s).{8,}$/;
     return regExp;
 }
 
