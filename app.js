@@ -2,6 +2,7 @@ require('dotenv').config();
 const path = require('path');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const cors = require('cors');
 const express = require('express');
 const app = express();
 
@@ -15,6 +16,7 @@ const { googlePassportConfig } = require('./controllers/passport');
 // **********  INITIALIZE MIDDLEWARES  *************//
 app.set('view engine', 'ejs');
 app.set('views', 'views');
+app.use(cors());
 
 
 //passport middlewares
