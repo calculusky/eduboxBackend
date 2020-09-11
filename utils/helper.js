@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const mailgun = require('nodemailer-mailgun-transport');
+const speakeasy = require('speakeasy');
 
 
 exports.throwError = (message, statusCode, errors) => {
@@ -33,11 +34,13 @@ exports.sanitizeName = (name) => {
 }
 
 //generate email verification code
-exports.generateCode = (length) => {
+exports.generateCode = () => {
+    let length = 6;
     let result = '';
     const characters = 'ABCDEFGHIJK01234LMNOPQRSTUVWXYZ56789';
     for(let i = 0; i < length; i++){
         result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
+    }  
     return result;
 }
+

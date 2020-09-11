@@ -4,7 +4,6 @@ const { throwError, passwordRegExp, transporter, sanitizeName, generateCode } = 
 const { registrationEmail } = require('../utils/support');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const emailVerificationLink = 'http://localhost:8080/auth/verifyemail';
 
 exports.postSignup = async(req, res, next) => {
     const {
@@ -67,7 +66,7 @@ exports.postSignup = async(req, res, next) => {
         }
 
         //store the user in the db and return a token to the client  in case the user received no mail
-        const emailVerificationCode = generateCode(6);
+        const emailVerificationCode = generateCode();
         const harshedPassword = await hash(sanPassword, 12);
         const newUser = {
             email: sanEmail,
@@ -82,14 +81,17 @@ exports.postSignup = async(req, res, next) => {
         const token = await jwt.sign(newUser, process.env.JWT_SIGN_KEY);
         const user = new User(newUser);
         const savedUser = await user.save();
-        res.status(200).json({ message: 'Email verification sent to your email address', registerToken: token });
+        res.status(200).json({ 
+            message: 'Email verification sent to your email address',
+            email: sanEmail, 
+            token: token 
+        });
 
         //send a confirmation mail to the user
         const registrationEmailVariables = {
             email: sanEmail,
             name: sanFirstname,
-            code: emailVerificationCode,
-            link: emailVerificationLink
+            code: emailVerificationCode
         }
         const mailOPts = registrationEmail(registrationEmailVariables);
         await transporter().sendMail(mailOPts);
@@ -112,12 +114,24 @@ exports.postResendEmailVerificationCode = async (req, res, next) => {
             throw error
         }
 
+        //generate another token and store in db
+        const emailVerificationCode = generateCode();
+        const user = await User.findOne({email: decodedUser.email});
+        console.log(user, 'user')
+        if(!user){
+            const error = new Error('Error fetching user');
+            error.statusCode = 500;
+            throw error;
+        }
+        user.emailVerificationCode = emailVerificationCode;
+        const a = await user.save();
+        console.log(a)
+
         //resend the email
         const registrationEmailVariables = {
             email: decodedUser.email,
             name: decodedUser.firstname,
-            code: decodedUser.emailVerificationCode,
-            link: decodedUser.emailVerificationLink
+            code: emailVerificationCode,
         }
         const mailOPts = registrationEmail(registrationEmailVariables);
         res.status(200).json({message: 'Email verification successfuly resent', token: token})
@@ -130,26 +144,22 @@ exports.postResendEmailVerificationCode = async (req, res, next) => {
 
 }
 
-exports.getVerifyAccount = async (req, res, next) => {
+exports.postVerifyAccount = async (req, res, next) => {
     //verify new users email and activate their account
-    const { verifycode, email } = req.query;  
+    const { code, email, token } = req.body;  
     try {
-        const newUser = await User.findOne({ emailVerificationCode: verifycode, email: email});
-        const verifiedUser = await User.findOne({email: email, status: 'active'});
-        if(newUser){
-            newUser.status = 'active';
-            newUser.emailVerificationCode = undefined;
-            const savedUser = await newUser.save();
-            const returnUser = {
-                ...savedUser._doc,
-                password: undefined
-            }
-            return res.status(200).json({message: 'Account successfully created', user: returnUser});                
-        }else if(verifiedUser){
-           return res.status(401).json({message: 'Email already verified'})
-        }else{
-           return res.status(404).json({message: 'User not found'})
-        }        
+        const newUser = await User.findOne({ emailVerificationCode: code, email: email});
+        if(!newUser){
+            return res.status(401).json({ message: 'Invalid code', token: token })
+        }
+        newUser.status = 'active';
+        newUser.emailVerificationCode = undefined;
+        const savedUser = await newUser.save();
+        const returnUser = {
+            ...savedUser._doc,
+            password: undefined
+        }
+        return res.status(200).json({message: 'Account successfully created', user: returnUser});       
         
     } catch (error) {
       next(error)  
