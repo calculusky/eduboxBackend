@@ -1,6 +1,5 @@
 const nodemailer = require('nodemailer');
 const mailgun = require('nodemailer-mailgun-transport');
-const speakeasy = require('speakeasy');
 
 
 exports.throwError = (message, statusCode, errors) => {
@@ -13,6 +12,11 @@ exports.throwError = (message, statusCode, errors) => {
 //check for password ****Note*** At least one lowercase, uppercase, numeral and special characters: @,!,$ only with minimum of 8 characters
 exports.passwordRegExp = () => {
     const regExp = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[@!$])(?!.*[£&#_%^*+()\-\~\`\\/\"\'|\[\]}{:;/>.<,])(?!.*\s).{8,}$/;
+    return regExp;
+}
+
+exports.verifyEmailCodeRegExp = () => {
+    const regExp = /^(?=.*[a-zA-Z0-9])(?!.*[@!$£&#_%^*+()\-\~\`\\/\"\'|\[\]}{:;/>.<,])(?!.*\s).{6}$/;
     return regExp;
 }
 
@@ -38,9 +42,8 @@ exports.generateCode = () => {
     let length = 6;
     let result = '';
     const characters = 'ABCDEFGHIJK01234LMNOPQRSTUVWXYZ56789';
-    for(let i = 0; i < length; i++){
+    for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }  
+    }
     return result;
 }
-

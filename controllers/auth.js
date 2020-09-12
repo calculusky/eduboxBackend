@@ -1,7 +1,7 @@
 const { isEmail, isEmpty, matches, isAlpha, normalizeEmail } = require('validator');
 const { hash, compare } = require('bcryptjs');
-const { throwError, passwordRegExp, transporter, sanitizeName, generateCode } = require('../utils/helper');
-const { registrationEmail } = require('../utils/support');
+const { throwError, passwordRegExp, transporter, sanitizeName, generateCode, verifyEmailCodeRegExp } = require('../utils/helper');
+const { registrationEmail, successfulRegistrationEmail } = require('../utils/support');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
@@ -81,10 +81,10 @@ exports.postSignup = async(req, res, next) => {
         const token = await jwt.sign(newUser, process.env.JWT_SIGN_KEY);
         const user = new User(newUser);
         const savedUser = await user.save();
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Email verification sent to your email address',
-            email: sanEmail, 
-            token: token 
+            email: sanEmail,
+            token: token
         });
 
         //send a confirmation mail to the user
@@ -103,29 +103,28 @@ exports.postSignup = async(req, res, next) => {
 }
 
 
-exports.postResendEmailVerificationCode = async (req, res, next) => {
+exports.postResendEmailVerificationCode = async(req, res, next) => {
     //post request
     const token = req.body.token;
     try {
         const decodedUser = await jwt.verify(token, process.env.JWT_SIGN_KEY);
-        if(!decodedUser){
+        if (!decodedUser) {
             const error = new Error('Invalid token');
             error.statusCode = 401;
             throw error
         }
 
-        //generate another token and store in db
+        //generate another code and store in db
         const emailVerificationCode = generateCode();
-        const user = await User.findOne({email: decodedUser.email});
+        const user = await User.findOne({ email: decodedUser.email });
         console.log(user, 'user')
-        if(!user){
+        if (!user) {
             const error = new Error('Error fetching user');
             error.statusCode = 500;
             throw error;
         }
         user.emailVerificationCode = emailVerificationCode;
-        const a = await user.save();
-        console.log(a)
+        await user.save();
 
         //resend the email
         const registrationEmailVariables = {
@@ -134,23 +133,41 @@ exports.postResendEmailVerificationCode = async (req, res, next) => {
             code: emailVerificationCode,
         }
         const mailOPts = registrationEmail(registrationEmailVariables);
-        res.status(200).json({message: 'Email verification successfuly resent', token: token})
+        res.status(200).json({ message: 'Email verification successfuly resent', token: token })
         await transporter().sendMail(mailOPts);
 
-        
+
     } catch (error) {
         next(error);
     }
 
 }
 
-exports.postVerifyAccount = async (req, res, next) => {
+exports.postVerifyEmail = async(req, res, next) => {
+
     //verify new users email and activate their account
-    const { code, email, token } = req.body;  
+    const { code, email } = req.body;
+
     try {
-        const newUser = await User.findOne({ emailVerificationCode: code, email: email});
-        if(!newUser){
-            return res.status(401).json({ message: 'Invalid code', token: token })
+        //sanitize and validate input
+        const errors = []
+        const sanCode = code.trim();
+        if (!isEmail(email)) {
+            errors.push({ message: 'Invalid email address' });
+        }
+        if (!matches(sanCode, verifyEmailCodeRegExp())) {
+            errors.push({ message: 'code must be 6-digit containing only letters or numbers' })
+        }
+        const sanEmail = normalizeEmail(email.trim());
+        if (errors.length > 0) {
+            throwError('invalid verification input', 401, errors)
+        }
+
+        const newUser = await User.findOne({ emailVerificationCode: sanCode, email: sanEmail });
+        if (!newUser) {
+            const error = new Error('Invalid code');
+            error.statusCode = 401;
+            throw error;
         }
         newUser.status = 'active';
         newUser.emailVerificationCode = undefined;
@@ -159,9 +176,17 @@ exports.postVerifyAccount = async (req, res, next) => {
             ...savedUser._doc,
             password: undefined
         }
-        return res.status(200).json({message: 'Account successfully created', user: returnUser});       
-        
+        res.status(200).json({ message: 'Email successfully verified', user: returnUser });
+
+        //send email
+        const successfulRegistrationEmailVariables = {
+            email: newUser.email,
+            name: newUser.firstname
+        }
+        const mailOPts = successfulRegistrationEmail(successfulRegistrationEmailVariables);
+        await transporter().sendMail(mailOPts);
+
     } catch (error) {
-      next(error)  
+        next(error)
     }
 }

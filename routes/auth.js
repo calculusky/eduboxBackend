@@ -1,21 +1,24 @@
 const express = require('express');
-const router = express.Router()
+const router = express.Router();
+const {
+    resendRegistrationMail
+} = require('../middleware/auth');
 
-const { 
-       postSignup, 
-       postVerifyAccount, 
-       postResendEmailVerificationCode
-      } = require('../controllers/auth');
+const {
+    postSignup,
+    postVerifyEmail,
+    postResendEmailVerificationCode
+} = require('../controllers/auth');
 
-const { 
-        getPassportAuthGoogleSuccess,
-        getPassportAuthGoogleProfile,
-        getPassportAuthGoogleFailure,        
-       } = require('../controllers/passportAuth');
+const {
+    getPassportAuthGoogleSuccess,
+    getPassportAuthGoogleProfile,
+    getPassportAuthGoogleFailure,
+} = require('../controllers/passportAuth');
 
 
-router.post('/signup', postSignup);
-router.get('/verifyemail', postVerifyAccount);
+router.post('/signup', resendRegistrationMail, postSignup);
+router.post('/verifyemail', postVerifyEmail);
 router.post('/resendverificationemail', postResendEmailVerificationCode);
 router.get('/google', getPassportAuthGoogleProfile);
 router.get('/google/callback', getPassportAuthGoogleFailure, getPassportAuthGoogleSuccess)
