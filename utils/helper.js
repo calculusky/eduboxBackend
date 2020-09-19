@@ -2,14 +2,15 @@ const nodemailer = require('nodemailer');
 const mailgun = require('nodemailer-mailgun-transport');
 
 
-exports.throwError = (message, statusCode, errors) => {
+exports.throwError = ({message, status, detail, validationErrors}) => {
     const error = new Error(message);
-    error.statusCode = statusCode;
-    error.data = errors;
+    error.status = status;
+    error.detail = detail;
+    error.data = validationErrors;
     throw error;
 }
 
-//check for password ****Note*** At least one lowercase, uppercase, numeral and special characters: @,!,$ only with minimum of 8 characters
+//check for password ****Note*** At least one letter, numeral and special characters: @,!,$ only with minimum of 8 characters
 exports.passwordRegExp = () => {
     const regExp = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[@!$])(?!.*[£&#_%^*+()\-\~\`\\/\"\'|\[\]}{:;/>.<,])(?!.*\s).{8,}$/;
     return regExp;

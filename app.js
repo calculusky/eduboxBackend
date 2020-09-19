@@ -9,6 +9,7 @@ const app = express();
 
 //import all routes
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
 
 //import files
 const { googlePassportConfig } = require('./controllers/passport');
@@ -35,6 +36,7 @@ googlePassportConfig(passport);
 
 //*************** ROUTES  **********************/
 app.use('/auth', authRoutes);
+app.use(userRoutes)
 
 //***************************************************/
 
@@ -49,10 +51,20 @@ app.get('/', (req, res) => {
 
 //handle errors
 app.use((error, req, res, next) => {
-    const statusCode = error.statusCode || 500;
+    const status = error.status || 500;
     const errorMessage = error.message;
+    const errorDetail = error.detail || null;
     const validationErrors = error.data || null;
-    res.status(statusCode).json({ errorMessage: errorMessage, statusCode: statusCode, validationErrors: validationErrors })
+    res.status(status).json({ 
+       errors: [
+           {
+            errorMessage: errorMessage, 
+            status: status, 
+            detail: errorDetail,
+           }
+       ],
+        validationErrors: validationErrors 
+    })
 })
 
 //connect the app to db

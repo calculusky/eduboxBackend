@@ -1,7 +1,7 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const { registrationEmail } = require('../utils/support');
-const { transporter, generateCode } = require('../utils/helper');
+const { transporter, generateCode, throwError } = require('../utils/helper');
 
 exports.resendRegistrationMail = async(req, res, next) => {
     const user = await User.findOne({ email: req.body.email, status: 'inactive' });
@@ -29,4 +29,58 @@ exports.resendRegistrationMail = async(req, res, next) => {
         return;
     }
     return next();
+}
+
+exports.checkPermission = async (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+
+    try {
+        if(!authHeader){
+            throwError({ 
+                message: 'Not authorized', 
+                status: 401, 
+                detail: 'Token found. Make sure a token is included in the header',
+                validationErrors: null
+            });
+        }
+       
+        //retrieve token
+        const token = authHeader.split(' ')[1];
+
+        //check if the token corresponds with the one stored in the database ----security measures ----
+        const isTokenStored = await User.findOne({loginToken: token});
+        console.log(isTokenStored, 'isToken---')
+        if(!isTokenStored){
+            throwError({ 
+                message: 'Not authorized.',
+                detail: 'Access denied. No user associated with such token', 
+                status: 401, 
+                validationErrors: null
+            });
+        }
+        const decodedUser = await jwt.verify(token, process.env.JWT_SIGN_KEY);
+        if(!decodedUser){
+            throwError({ 
+                message: 'Authentication failed.',
+                detail: 'verification of jwt token failed. Try again', 
+                status: 500, 
+                validationErrors: null
+            });
+        }
+        
+        //store the user ID in the request body 
+        req.userId = decodedUser._id;
+        return next();
+    } catch (error) {
+        if(error.message === 'jwt expired'){
+            error.detail = 'Access denied due to expired jwt token';
+            error.status = 401;
+        }
+        if(error.message === 'invalid token'){
+            error.detail = 'Access denied due to invalid jwt token';
+            error.status = 401;
+        }       
+        console.log(error)
+        next(error)
+    }
 }
