@@ -40,8 +40,8 @@ const userSchema = new Schema({
     emailVerificationCode: {
         type: String
     },
-    loginToken: {
-        type: String
+    loginTokens: {
+        type: []
     }
 
 })

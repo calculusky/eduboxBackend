@@ -39,7 +39,7 @@ exports.checkPermission = async (req, res, next) => {
             throwError({ 
                 message: 'Not authorized', 
                 status: 401, 
-                detail: 'Token found. Make sure a token is included in the header',
+                detail: 'Token not found. Make sure a token is included in the header',
                 validationErrors: null
             });
         }
@@ -48,21 +48,21 @@ exports.checkPermission = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
 
         //check if the token corresponds with the one stored in the database ----security measures ----
-        const isTokenStored = await User.findOne({loginToken: token});
-        console.log(isTokenStored, 'isToken---')
+        const isTokenStored = await User.findOne({loginTokens: token});
         if(!isTokenStored){
             throwError({ 
                 message: 'Not authorized.',
-                detail: 'Access denied. No user associated with such token', 
+                detail: 'Access denied. Token does not exist', 
                 status: 401, 
                 validationErrors: null
             });
         }
         const decodedUser = await jwt.verify(token, process.env.JWT_SIGN_KEY);
+        //console.log(decodedUser, 'decUser')
         if(!decodedUser){
             throwError({ 
                 message: 'Authentication failed.',
-                detail: 'verification of jwt token failed. Try again', 
+                detail: 'Verification of jwt token failed. Try again', 
                 status: 500, 
                 validationErrors: null
             });

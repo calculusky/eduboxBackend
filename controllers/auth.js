@@ -255,10 +255,25 @@ exports.postLogin = async (req, res, next) => {
             email: user._doc.email,
             institution: user._doc.institution
         }
-        const token = jwt.sign(userPayload, process.env.JWT_SIGN_KEY, { expiresIn: '12h' });
-        user.loginToken = token;
-        await user.save();
-        return res.status(200).json({ message: 'login successful', token: token});
+
+        const token =  jwt.sign(userPayload, process.env.JWT_SIGN_KEY, { expiresIn: '4m' });
+
+        //check if there are some expired tokens in the database and delete
+        let newTokens = [];
+        let oldTokens = user.loginTokens;
+        let oldPayload;
+       if(oldTokens.length > 0){
+        for(let i=0; i<oldTokens.length; i++){
+            oldPayload = await jwt.verify(oldTokens[i], process.env.JWT_SIGN_KEY, { ignoreExpiration: true });
+            if((oldPayload.exp * 1000) > Date.now()){
+                newTokens.push(oldTokens[i]);
+            }
+        }
+       }
+       newTokens.push(token);
+       user.loginTokens = newTokens;
+       await user.save();
+       return res.status(200).json({ message: 'login successful', token: token});
 
     } catch (error) {
         next(error);
