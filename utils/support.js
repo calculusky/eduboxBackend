@@ -34,3 +34,23 @@ exports.successfulRegistrationEmail = ({ email, name }) => {
     }
     return mailOPts;
 }
+
+//password reset email
+exports.passwordResetEmail = ({ email, name, duration, token }) => {
+    const mailOPts = {
+        from: process.env.EMAIL_SENDER,
+        to: email,
+        subject: 'Edubox Password Reset ',
+        html: `<div style="border-radius:5px; box-shadow: 1px 1px 3px #222">
+                                <h2>EDUBOX Password Reset</h2>
+                                <p>Dear ${name},</p> 
+                                <p>Here is your password reset OTP</p>
+                                <h3>${token}</h3> 
+                                <p>Please note that the OTP expires after ${duration} minutes. Make sure you verify within the time frame</p>
+                                <p>If you did not receive the email, kindly ignore it</p>
+                                <p> Warm Regards! </p>
+                                <h4>Edubox</h4>
+                    </div>`
+    }
+    return mailOPts;
+}

@@ -9,19 +9,11 @@ const userSchema = new Schema({
         type: String,
         //required: true
     },
-    firstname: {
+    fullName: {
         type: String,
         required: true
     },
-    middlename: {
-        type: String
-        //required: true
-    },
-    lastname: {
-        type: String,
-        required: true
-    },
-    educationlevel: {
+    educationLevel: {
         type: String
         //required: true
     },
@@ -33,6 +25,9 @@ const userSchema = new Schema({
         type: String
         //required: true
     },
+    description: {
+        type: String,
+    },
     status: {
         type: String,
         default: 'inactive'
@@ -42,6 +37,9 @@ const userSchema = new Schema({
     },
     loginTokens: {
         type: []
+    },
+    passwordResetOTP: {
+        type: String
     }
 
 })

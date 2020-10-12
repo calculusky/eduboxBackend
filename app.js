@@ -52,13 +52,13 @@ app.get('/', (req, res) => {
 //handle errors
 app.use((error, req, res, next) => {
     const status = error.status || 500;
-    const errorMessage = error.message;
+    const message = error.message;
     const errorDetail = error.detail || null;
     const validationErrors = error.data || null;
     res.status(status).json({ 
        errors: [
            {
-            errorMessage: errorMessage, 
+            message: message, 
             status: status, 
             detail: errorDetail,
            }

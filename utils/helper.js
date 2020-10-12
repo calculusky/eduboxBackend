@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const mailgun = require('nodemailer-mailgun-transport');
+const speakeasy = require('speakeasy');
 
 
 exports.throwError = ({message, status, detail, validationErrors}) => {
@@ -34,8 +35,13 @@ exports.transporter = () => {
 }
 
 //sanitize name
-exports.sanitizeName = (name) => {
-    return name.charAt(0).toUpperCase() + name.slice(1);
+exports.sanitizeName = (inputnames) => {
+    const names = inputnames.split(' ');
+    const newNames = names.map(name => {
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    })
+    const fullname = newNames.join(' ');
+    return fullname; 
 }
 
 //generate email verification code
@@ -47,4 +53,29 @@ exports.generateCode = () => {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     return result;
+}
+
+//generate otp token
+exports.otp = {
+    generateOTP: function(duration) {
+        const token = speakeasy.totp({
+            secret: process.env.OTP_KEY,
+            encoding: 'base32',
+            digits: 6,
+            step: 60,
+            window: duration
+        })
+        return token;
+    },
+
+    verifyOTP: function(token, duration) {
+        const isExpired = speakeasy.totp.verify({
+            secret: process.env.OTP_KEY,
+            encoding: 'base32',
+            token: token,
+            step: 60,
+            window: duration
+        })
+        return isExpired;
+    }
 }
