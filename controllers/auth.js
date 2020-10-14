@@ -94,7 +94,7 @@ exports.postSignup = async(req, res, next) => {
         const token = jwt.sign(newUser, process.env.JWT_SIGN_KEY);
         const user = new User(newUser);
         const savedUser = await user.save();
-        res.status(200).json({
+        res.status(201).json({
             message: 'Email verification sent to your email address',
             email: sanEmail,
             token: token
@@ -349,7 +349,7 @@ exports.postForgotPassword = async (req, res, next) => {
 
 //verify password reset token
 exports.postVerifyPasswordResetOTP = async (req, res, next) => {
-    const otpToken = req.body.resetpasswordtoken;
+    const otpToken = req.body.resetpasswordotp;
    try {
         const isOTPValid = otp.verifyOTP(otpToken, config.otp.duration);
         if(!isOTPValid){
