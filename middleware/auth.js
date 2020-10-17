@@ -28,7 +28,11 @@ exports.resendRegistrationMail = async (req, res, next) => {
         }
         const mailOPts = registrationEmail(registrationEmailVariables);
         const name = user.fullName.split(' ')[0];
-        res.status(200).json({ message: `Dear ${name}, your email, ${user.email} has not been verified, we have sent a verification code to your email`, token: token })
+        res.status(200).json({ 
+            email: user.email,
+            message: `Dear ${name}, your email, ${user.email} has not been verified, we have sent a verification code to your email`, 
+            token: token 
+        })
         await transporter().sendMail(mailOPts);
 
         return;
