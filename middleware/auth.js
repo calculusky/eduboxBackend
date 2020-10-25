@@ -28,9 +28,12 @@ exports.checkUnverifiedEmail = async (req, res, next) => {
             }
             const mailOPts = registrationEmail(registrationEmailVariables);
             const name = user.fullName.split(' ')[0];
-            res.status(200).json({ message: `Dear ${name}, we just sent an email verification code to your email, ${user.email}.`, token: token })
+            res.status(200).json({
+                email: user.email, 
+                message: `Dear ${name}, we just sent an email verification code to your email, ${user.email}.`, 
+                token: token 
+            })
             await transporter().sendMail(mailOPts);
-
             return;
         }
         return next();
@@ -90,4 +93,3 @@ exports.checkPermission = async (req, res, next) => {
         next(error)
     }
 }
-
