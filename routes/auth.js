@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const {
-    resendRegistrationMail
+   checkUnverifiedEmail
 } = require('../middleware/auth');
 
 const {
@@ -22,13 +22,13 @@ const {
 } = require('../controllers/passportAuth');
 
 
-router.post('/signup', resendRegistrationMail, postSignup);
+router.post('/signup', checkUnverifiedEmail, postSignup);
 router.post('/verifyemail', postVerifyEmail);
 router.post('/resendverificationemail', postResendEmailVerificationCode);
 router.post('/forgotpassword', postForgotPassword);
 router.post('/verifyresetpasswordotp', postVerifyPasswordResetOTP);
 router.post('/updatepassword', postUpdatePassword);
-router.post('/login', postLogin);
+router.post('/login', checkUnverifiedEmail, postLogin);
 router.get('/google', getPassportAuthGoogleProfile);
 router.get('/google/callback', getPassportAuthGoogleFailure, getPassportAuthGoogleSuccess)
 

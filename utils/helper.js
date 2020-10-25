@@ -3,11 +3,11 @@ const mailgun = require('nodemailer-mailgun-transport');
 const speakeasy = require('speakeasy');
 
 
-exports.throwError = ({message, status, detail, validationErrors}) => {
-    const error = new Error(message);
+exports.throwError = ({ message, status, detail }) => {
+    const error = new Error();
+    error.message = message;
     error.status = status;
     error.detail = detail;
-    error.data = validationErrors;
     throw error;
 }
 

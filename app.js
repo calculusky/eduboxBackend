@@ -51,10 +51,10 @@ app.get('/', (req, res) => {
 
 //handle errors
 app.use((error, req, res, next) => {
+    console.log(error, 'meess')
     const status = error.status || 500;
     const message = error.message;
     const errorDetail = error.detail || null;
-    const validationErrors = error.data || null;
     res.status(status).json({ 
        errors: [
            {
@@ -62,8 +62,7 @@ app.use((error, req, res, next) => {
             status: status, 
             detail: errorDetail,
            }
-       ],
-        validationErrors: validationErrors 
+       ] 
     })
 })
 

@@ -36,22 +36,22 @@ exports.postSignup = async(req, res, next) => {
     //validate user input
     const errors = []
     if (!isEmail(email)) {
-        errors.push({ message: 'Invalid email address' });
+        errors.push('Invalid email address');
     }
     if (isEmpty(fullname)) {
-        errors.push({ message: 'Please enter a valid name' })
+        errors.push('Please enter a valid name')
     }
     if (!isAlpha(institution)) {
-        errors.push({ message: 'Please enter a valid institution name' })
+        errors.push('Please enter a valid institution name');
     }
     if (!isAlpha(educationlevel)) {
-        errors.push({ message: 'Please enter a valid education level' })
+        errors.push('Please enter a valid education level')
     }
     if (!matches(password, passwordRegExp())) {
-        errors.push({ message: 'Password must be minimum of 8 containing at least one letter, one number and special character(s) @, $, !' });
+        errors.push('Password must be minimum of 8 containing at least one letter, one number and special character(s) @, $, !');
     }
     if (password !== confirmpassword) {
-        errors.push({ message: 'password do not match' })
+        errors.push('password do not match');
     }
 
     //sanitize the input
@@ -62,10 +62,9 @@ exports.postSignup = async(req, res, next) => {
         //call the error handling function and forward the validation errors to the error handling middleware
         if (errors.length > 0) {
             throwError({ 
-                message: 'invalid signup input', 
+                message: errors, 
                 status: 422, 
                 detail: 'Failed to register user due to invalid inputs. Make sure to input a valid data',
-                validationErrors: errors
             });
         }
 
@@ -73,10 +72,9 @@ exports.postSignup = async(req, res, next) => {
         const existingUser = await User.findOne({ email: sanEmail });
         if (existingUser) {
             throwError({ 
-                message: 'Email already exists',
+                message: ['Email already exists'],
                 detail: 'A user exists with the email. Please use a different email or login', 
-                status: 401, 
-                validationErrors: null
+                status: 401
             });
         }
 
@@ -122,10 +120,9 @@ exports.postResendEmailVerificationCode = async (req, res, next) => {
         const decodedUser = await jwt.verify(token, process.env.JWT_SIGN_KEY);
         if (!decodedUser) {
             throwError({ 
-                message: 'failed to decode token', 
+                message: ['failed to decode token'], 
                 detail: 'jwt decoding for user failed, try again',
-                status: 401, 
-                validationErrors: null
+                status: 401 
             });
         }
 
@@ -134,10 +131,9 @@ exports.postResendEmailVerificationCode = async (req, res, next) => {
         const user = await User.findOne({ email: decodedUser.email });
         if (!user) {
             throwError({ 
-                message: 'User not found',
+                message: ['User not found'],
                 detail: 'No user associated with the email', 
-                status: 404, 
-                validationErrors: null
+                status: 404
             });
         }
         user.emailVerificationCode = emailVerificationCode;
@@ -178,20 +174,18 @@ exports.postVerifyEmail = async (req, res, next) => {
         const sanEmail = normalizeEmail(email.trim());
         if (errors.length > 0) {
             throwError({ 
-                message: 'invalid verification input', 
+                message: errors, 
                 detail: 'Verification code or email is not valid',
-                status: 422, 
-                validationErrors: errors
+                status: 422
             });
         }
 
         const newUser = await User.findOne({ emailVerificationCode: sanCode, email: sanEmail });
         if (!newUser) {
             throwError({ 
-                message: 'Incorrect code or email', 
+                message: ['Incorrect code or email'], 
                 detail: 'No user associated with the email or verification code',
                 status: 404, 
-                validationErrors: null
             });
         }
         newUser.status = 'active';
@@ -229,10 +223,9 @@ exports.postLogin = async (req, res, next) => {
         }
         if(errors.length > 0){
         throwError({ 
-            message: 'invalid inputs', 
+            message: errors, 
             status: 422, 
-            detail: 'failed to login due to invalid inputs',
-            validationErrors: errors
+            detail: 'failed to login due to invalid inputs'
         });
         }
         const sanEmail = normalizeEmail(email.trim());
@@ -241,19 +234,17 @@ exports.postLogin = async (req, res, next) => {
         const user = await User.findOne({email: sanEmail});
         if(!user){
             throwError({ 
-                message: 'user not found',
+                message: ['Email does not exist'],
                 detail: 'The user with the email does not exist', 
-                status: 404, 
-                validationErrors: null
+                status: 404
             });
         }
         const isMatch = await compare(sanPassword, user.password);
         if(!isMatch){
             throwError({ 
-                message: 'incorrect password',
+                message: ['Incorrect password'],
                 detail: 'Password entered is incorrect', 
-                status: 422, 
-                validationErrors: null
+                status: 422
             });
         }
         
@@ -303,10 +294,9 @@ exports.postForgotPassword = async (req, res, next) => {
         }
         if(errors.length > 0){
             throwError({
-                message: 'Invalid email',
+                message: errors,
                 detail: 'Validation failed due to invalid email address',
-                status: 422,
-                validationErrors: errors
+                status: 422, 
             })
         }
         const sanEmail = normalizeEmail(email.trim());
@@ -315,7 +305,7 @@ exports.postForgotPassword = async (req, res, next) => {
         const user = await User.findOne({email: sanEmail});
         if(!user){
             throwError({
-                message: 'User not found',
+                message: ['User not found'],
                 detail: 'No user associated with such email',
                 status: 404
             })
@@ -354,7 +344,7 @@ exports.postVerifyPasswordResetOTP = async (req, res, next) => {
         const isOTPValid = otp.verifyOTP(otpToken, config.otp.duration);
         if(!isOTPValid){
             throwError({
-                message: 'Invalid or expired token',
+                message: ['Invalid or expired token'],
                 detail: 'The password reset OTP verification code is either expired or invalid',
                 status: 401
             });
@@ -362,7 +352,7 @@ exports.postVerifyPasswordResetOTP = async (req, res, next) => {
         const user = await User.findOne({ passwordResetOTP: otpToken });
         if(!user){
             throwError({
-                message: 'User not found',
+                message: ['User not found'],
                 detail: 'Unable to find user with such token',
                 status: 404
             })
@@ -394,10 +384,9 @@ exports.postUpdatePassword = async (req, res, next) => {
         const sanPassword = newpassword.trim();
         if(errors.length > 0){
             throwError({
-                message: 'Invalid inputs',
+                message: errors,
                 detail: 'Failed to create new password due to wrong inputs',
-                status: 422,
-                validationErrors: errors
+                status: 422
             })
         }
         
@@ -405,7 +394,7 @@ exports.postUpdatePassword = async (req, res, next) => {
         const user = await User.findOne({ email: email });
         if(!user){
             throwError({
-                message: 'User not found',
+                message: ['User not found'],
                 detail: 'Could not find the user with such email to update password',
                 status: 404
             });
